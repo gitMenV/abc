@@ -1,0 +1,122 @@
+abcFile ::= abcVersion, [fileHeader], {tune};
+
+
+abcVersion ::= '%', 'a', 'b', 'c', ['-', DIGIT+, '.', DIGIT+];
+
+fileHeader ::= {headerInfoField | comment}, newLine;
+
+tune ::= tuneHeader, tuneBody;
+
+tuneHeader ::= referenceNumber, tuneTitle, {(tuneHeaderInfoField | comment)}, tuneKey;
+
+tuneBody ::= {musicLine};
+
+
+(*musicLine is everything that is not an information field, stylesheet directive or comment*)
+musicLine ::= comment | (tuneBodyInfoField, lineFeed) | (element, {element} , lineFeed) ;
+
+
+(*isNote, isAnnotation, isBarline, isInline, isRepeat*)
+(*in this case, repeat is actually the first and second repeats from the specification.*)
+element ::= note | annotation | barline | space | inLine | repeat | chord | brokenRhythm;
+
+brokenRhythm ::= '<' | '>';
+chord ::= '[', note, {note}, ']';
+(*Annotations are used to denote chords*)
+annotation ::= '"', text, '"';
+
+note ::= noteOrRest [duration];
+
+(*isRest*)
+noteOrRest ::= pitch | rest;
+
+pitch ::= [accidental] baseNote {octave};
+
+octave ::= "'" | ",";
+
+baseNote ::= 
+    'C' | 'D' | 'E' | 'F' | 'G' | 'A' | 'B'
+    'c' | 'd' | 'e' | 'f' | 'g' | 'a' | 'b'
+;
+
+rest ::= 'z';
+(* ^ is sharp, _ is flat, = is neutral *)
+accidental ::= '^' | '^^' | '_' | '__' | '=';
+
+duration ::= DIGIT {DIGIT} | {DIGIT} '/' DIGIT {DIGIT};
+
+barline ::= ('|') | ('||') | ('[|') | ('|]') | (':|') | ('|:');
+space ::= ' ';
+repeat ::= '[', ( '1' | '2');
+
+
+inline ::= '[', tuneBodyInfoField, ']';
+
+
+(*information fields all start with a character, and then with ':'*)
+(*This will be checked with isInfoField*)
+headerInfoField ::= 
+    (area | book | composer | discography | 
+    fileURL | group | history | instruction | 
+    unitNoteLength | meter | macro | notes | 
+    origin | rhythm | remark | source | 
+    userDefined | transcription), lineFeed
+;
+tuneHeaderInfoField ::= 
+    (headerInfoField | parts, lineFeed | 
+    tempo, lineFeed | voice, lineFeed | words), lineFeed
+;
+(*note that lineFeed is missing here*)
+tuneBodyInfoField ::= 
+    instruction | tuneKey | unitNoteLength | 
+    meter | macro | notes | parts | tempo | 
+    rhythm | remark | symbolLine | tuneTitle | 
+    userDefined | voice | words
+;
+(*characters are: I, K, L, M, m, N, P, Q, R, r, s, T, U, V and W/w*)
+
+(*These are the information fields as shown in 
+http://abcnotation.com/wiki/abc:standard:v2.1#information_field_definition*)
+
+area            ::= 'A', ':', text, (comment | lineFeed);
+book            ::= 'B', ':', text, (comment | lineFeed);
+composer        ::= 'C', ':', text, (comment | lineFeed);
+discography     ::= 'D', ':', text, (comment | lineFeed);
+fileURL         ::= 'F', ':', text, (comment | lineFeed);
+group           ::= 'G', ':', text, (comment | lineFeed);
+history         ::= 'H', ':', text, (comment | lineFeed);
+instruction     ::= 'I', ':', ; (*TODO*)
+unitNoteLength  ::= 'L', ':', DIGIT+, '/', DIGIT+, (comment | lineFeed);
+meter           ::= 'M', ':', DIGIT+, '/', DIGIT+, (comment | lineFeed);
+macro           ::= 'm', ':', ; (*TODO*)
+notes           ::= 'N', ':', text, (comment | lineFeed);
+origin          ::= 'O', ':', text, (comment | lineFeed);
+rhythm          ::= 'R', ':', text, (comment | lineFeed);
+remark          ::= 'r', ':', text, (comment | lineFeed);
+source          ::= 'S', ':', text, (comment | lineFeed);
+symbolLine      ::= 's', ':', ; (*TODO*)
+userDefined     ::= 'U', ':', ; (*TODO*)
+transcription   ::= 'Z', ':', text;
+parts           ::= 'P', ':', ; (*TODO*)
+tempo           ::= 'Q', ':', ; (*TODO; MIT states that this is a digit+; specification disagrees*)
+voice           ::= 'V', ':', text, (comment | lineFeed);
+words           ::= ('W' | 'w'), ':', text, (comment | lineFeed);
+tuneKey         ::= 'K', ':', key;
+tuneTitle       ::= 'T', ':', text, (comment | lineFeed);
+referenceNumber ::= 'X', ':', DIGIT+, (comment | lineFeed);
+
+key             ::= keyNote [modeMinor];
+keyNote         ::= baseNote [keyAccidental];
+keyAccidental   ::= '#' | 'b';
+modeMinor       ::= 'm';
+
+comment ::= '%', text, lineFeed;
+text ::= '<all UTF-8 characters>'; 
+
+newLine ::= lineFeed;
+
+(*isLineFeed*)
+lineFeed ::= '\n';
+
+(*isDigit*)
+DIGIT ::='0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';

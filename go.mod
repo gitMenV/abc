@@ -1,5 +1,5 @@
-module abc-decoder
+module github.com/gitmenv/abc
 
-go 1.14
+go 1.15
 
 require github.com/pkg/errors v0.9.1
